@@ -38,18 +38,18 @@ Calculate the inhomogenous local K function.
 }
 \examples{
 library(spicyR)
-# Read in data as a SegmentedCells objects
+# Read in data
 isletFile <- system.file("extdata", "isletCells.txt.gz", package = "spicyR")
 cells <- read.table(isletFile, header = TRUE)
 cells$x <- cells$AreaShape_Center_X
 cells$y <- cells$AreaShape_Center_Y
 cells$cellType <- as.factor(sample(
-    c("big", "medium", "small"),
-    length(cells$AreaShape_Center_Y),
-    replace = TRUE
+  c("big", "medium", "small"),
+  length(cells$AreaShape_Center_Y),
+  replace = TRUE
 ))
 cells$cellID <- as.factor(cells$ObjectNumber)
 
-inhom <- inhomLocalK(cells[1:100,])
+inhom <- inhomLocalK(cells[1:100, ])
 
 }

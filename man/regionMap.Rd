@@ -14,7 +14,7 @@ regionMap(
 )
 }
 \arguments{
-\item{cells}{SegmentedCells, SingleCellExperiment, SpatialExperiment or data.frame}
+\item{cells}{SingleCellExperiment, SpatialExperiment or data.frame}
 
 \item{type}{Make a "bubble" or "heatmap" plot.}
 
@@ -33,20 +33,23 @@ A bubble plot or heatmap
 Plot heatmap of cell type enrichment for lisaClust regions
 }
 \examples{
+
 set.seed(51773)
-x <- round(c(runif(200),runif(200)+1,runif(200)+2,runif(200)+3,
-            runif(200)+3,runif(200)+2,runif(200)+1,runif(200)),4)*100
-y <- round(c(runif(200),runif(200)+1,runif(200)+2,runif(200)+3,
-            runif(200),runif(200)+1,runif(200)+2,runif(200)+3),4)*100
-cellType <- factor(paste('c',rep(rep(c(1:2),rep(200,2)),4),sep = ''))
-imageID <- rep(c('s1', 's2'),c(800,800))
+x <- round(c(
+  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+  runif(200) + 3, runif(200) + 2, runif(200) + 1, runif(200)
+), 4) * 100
+y <- round(c(
+  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3
+), 4) * 100
+cellType <- factor(paste("c", rep(rep(c(1:2), rep(200, 2)), 4), sep = ""))
+imageID <- rep(c("s1", "s2"), c(800, 800))
 
 cells <- data.frame(x, y, cellType, imageID)
 
-cellExp <- spicyR::SegmentedCells(cells, cellTypeString = 'cellType')
+cells <- lisaClust(cells, k = 2)
 
-cellExp <- lisaClust(cellExp, k = 2)
-
-regionMap(cellExp)
+regionMap(cells)
 
 }

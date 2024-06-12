@@ -3,10 +3,10 @@ Type: Package
 Title: lisaClust: Clustering of Local Indicators of Spatial Association
 Version: 1.11.1
 Authors@R: c(
-    person("Ellis", "Patrick", email = "ellis.patrick@sydney.edu.au",
-    role = c("aut", "cre")),
-    person("Nicolas", "Canete", email = "nicolas.canete@sydney.edu.au",
-    role = c("aut")))
+    person("Ellis", "Patrick", , "ellis.patrick@sydney.edu.au", role = c("aut", "cre")),
+    person("Nicolas", "Canete", , "nicolas.canete@sydney.edu.au", role = "aut"),
+    person("Nicholas", "Robertson", , "nicholas.robertson@sydney.edu.au", role = "ctb")
+  )
 Description: lisaClust provides a series of functions to identify and visualise 
     regions of tissue where spatial associations between cell-types is similar.
     This package can be used to provide a high-level summary of cell-type 
@@ -43,4 +43,4 @@ Imports:
     pheatmap,
     spatstat.random
 Suggests: BiocStyle, knitr, rmarkdown
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1

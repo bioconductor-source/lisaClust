@@ -33,8 +33,9 @@ library(BiocStyle)
 # Installation
 
 ```{r, eval = FALSE}
-if (!require("BiocManager"))
-    install.packages("BiocManager")
+if (!require("BiocManager")) {
+  install.packages("BiocManager")
+}
 BiocManager::install("lisaClust")
 ```
 
@@ -70,18 +71,23 @@ simulate data for two different images.
 
 ```{r eval=T}
 set.seed(51773)
-x <- round(c(runif(200),runif(200)+1,runif(200)+2,runif(200)+3,
-           runif(200)+3,runif(200)+2,runif(200)+1,runif(200)),4)*100
-y <- round(c(runif(200),runif(200)+1,runif(200)+2,runif(200)+3,
-             runif(200),runif(200)+1,runif(200)+2,runif(200)+3),4)*100
-cellType <- factor(paste('c',rep(rep(c(1:2),rep(200,2)),4),sep = ''))
-imageID <- rep(c('s1', 's2'),c(800,800))
+x <- round(c(
+  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+  runif(200) + 3, runif(200) + 2, runif(200) + 1, runif(200)
+), 4) * 100
+y <- round(c(
+  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3
+), 4) * 100
+cellType <- factor(paste("c", rep(rep(c(1:2), rep(200, 2)), 4), sep = ""))
+imageID <- rep(c("s1", "s2"), c(800, 800))
 
 cells <- data.frame(x, y, cellType, imageID)
 
-ggplot(cells, aes(x,y, colour = cellType)) + geom_point() + facet_wrap(~imageID) + theme_minimal()
-
-
+ggplot(cells, aes(x, y, colour = cellType)) +
+  geom_point() +
+  facet_wrap(~imageID) +
+  theme_minimal()
 ```
 
 ## Create Single Cell Experiment object
@@ -89,7 +95,6 @@ ggplot(cells, aes(x,y, colour = cellType)) + geom_point() + facet_wrap(~imageID)
 First we store our data in a `SingleCellExperiment` object.
 
 ```{r}
-
 SCE <- SingleCellExperiment(colData = cells)
 SCE
 ```
@@ -126,7 +131,7 @@ the red cell type `c1`, and `region_1` is dominated by the blue cell
 type `c2`.
 
 ```{r}
-hatchingPlot(SCE, useImages = c('s1','s2'))
+hatchingPlot(SCE, useImages = c("s1", "s2"))
 ```
 ## Using other clustering methods.
 
@@ -149,15 +154,14 @@ lisaCurves <- lisa(SCE, Rs = c(20, 50, 100))
 
 The LISA curves can then be used to cluster the cells. Here we use k-means 
 clustering, other clustering methods like SOM could be used. We can store these 
-cell clusters or cell "regions" in our `SingleCellExperiment` object using the 
-`cellAnnotation() <-` function.
+cell clusters or cell "regions" in our `SingleCellExperiment` object.
 
 ```{r}
 # Custom clustering algorithm
-kM <- kmeans(lisaCurves,2)
+kM <- kmeans(lisaCurves, 2)
 
 # Storing clusters into colData
-colData(SCE)$custom_region <- paste('region',kM$cluster,sep = '_')
+colData(SCE)$custom_region <- paste("region", kM$cluster, sep = "_")
 colData(SCE) |> head()
 ```
 
@@ -177,12 +181,12 @@ We will start by reading in the data and storing it as a
 that outputted by CellProfiler.
 
 ```{r}
-isletFile <- system.file("extdata","isletCells.txt.gz", package = "spicyR")
+isletFile <- system.file("extdata", "isletCells.txt.gz", package = "spicyR")
 cells <- read.table(isletFile, header = TRUE)
-damonSCE <- SingleCellExperiment(assay = list(intensities = t(cells[,grepl(names(cells), pattern = "Intensity_")])),
-                                 colData = cells[,!grepl(names(cells), pattern = "Intensity_")]
-                                 )
-
+damonSCE <- SingleCellExperiment(
+  assay = list(intensities = t(cells[, grepl(names(cells), pattern = "Intensity_")])),
+  colData = cells[, !grepl(names(cells), pattern = "Intensity_")]
+)
 ```
 
 ## Cluster cell-types
@@ -195,8 +199,8 @@ object using `colData() <-`.
 
 ```{r}
 markers <- t(assay(damonSCE, "intensities"))
-kM <- kmeans(markers,10)
-colData(damonSCE)$cluster <- paste('cluster', kM$cluster, sep = '')
+kM <- kmeans(markers, 10)
+colData(damonSCE)$cluster <- paste("cluster", kM$cluster, sep = "")
 colData(damonSCE)[, c("ImageNumber", "cluster")] |> head()
 ```
 
@@ -208,14 +212,13 @@ function, remembering to specify the `imageID`, `cellType`, and `spatialCoords`
 columns in `colData`.
 
 ```{r}
-
-damonSCE <- lisaClust(damonSCE, 
-                      k = 2, 
-                      Rs = c(10,20,50), 
-                      imageID = "ImageNumber", 
-                      cellType = "cluster",
-                      spatialCoords = c("Location_Center_X", "Location_Center_Y"))
-
+damonSCE <- lisaClust(damonSCE,
+  k = 2,
+  Rs = c(10, 20, 50),
+  imageID = "ImageNumber",
+  cellType = "cluster",
+  spatialCoords = c("Location_Center_X", "Location_Center_Y")
+)
 ```
 
 These regions are stored in `colData` and can be extracted.
@@ -239,11 +242,12 @@ increasing the parameter `k = ` in the `lisaClust()` function, but for the purpo
 of demonstration, let's take a look at the `hatchingPlot` of these regions.
 
 ```{r}
-regionMap(damonSCE, 
-          imageID = "ImageNumber", 
-          cellType = "cluster",
-          spatialCoords = c("Location_Center_X", "Location_Center_Y"),
-          type = "bubble")
+regionMap(damonSCE,
+  imageID = "ImageNumber",
+  cellType = "cluster",
+  spatialCoords = c("Location_Center_X", "Location_Center_Y"),
+  type = "bubble"
+)
 ```
 
 ## Plot identified regions
@@ -253,9 +257,11 @@ the regions are marked by different hatching patterns. This allows us to
 visualize the two regions and ten cell-types simultaneously.
 
 ```{r}
-hatchingPlot(damonSCE, 
-             cellType = "cluster",
-             spatialCoords = c("Location_Center_X", "Location_Center_Y"))
+hatchingPlot(damonSCE,
+  imageID = "ImageNumber",
+  cellType = "cluster",
+  spatialCoords = c("Location_Center_X", "Location_Center_Y")
+)
 ```
 
 # sessionInfo()

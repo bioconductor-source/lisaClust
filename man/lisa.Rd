@@ -21,7 +21,7 @@ lisa(
 )
 }
 \arguments{
-\item{cells}{A SegmentedCells, SingleCellExperiment, SpatialExperiment or data frame that contains at least the 
+\item{cells}{A SingleCellExperiment, SpatialExperiment or data frame that contains at least the
 variables x and y, giving the  coordinates of each cell, imageID and cellType.}
 
 \item{Rs}{A vector of the radii that the measures of association should be calculated.}
@@ -30,10 +30,10 @@ variables x and y, giving the  coordinates of each cell, imageID and cellType.}
 
 \item{window}{Should the window around the regions be 'square', 'convex' or 'concave'.}
 
-\item{window.length}{A tuning parameter for controlling the level of concavity 
+\item{window.length}{A tuning parameter for controlling the level of concavity
 when estimating concave windows.}
 
-\item{whichParallel}{Should the function use parallization on the imageID or 
+\item{whichParallel}{Should the function use parallization on the imageID or
 the cellType.}
 
 \item{sigma}{A numeric variable used for scaling when filting inhomogeneous L-curves.}
@@ -42,7 +42,7 @@ the cellType.}
 
 \item{minLambda}{Minimum value for density for scaling when fitting inhomogeneous L-curves.}
 
-\item{fast}{A logical describing whether to use a fast approximation of the 
+\item{fast}{A logical describing whether to use a fast approximation of the
 inhomogeneous local L-curves.}
 
 \item{spatialCoords}{The columns which contain the x and y spatial coordinates.}
@@ -59,21 +59,28 @@ Generate local indicators of spatial association
 }
 \examples{
 library(spicyR)
-# Read in data as a SegmentedCells objects
-isletFile <- system.file("extdata","isletCells.txt.gz", package = "spicyR")
-cells <- read.table(isletFile, header=TRUE)
-cellExp <- SegmentedCells(cells, cellProfiler = TRUE)
+library(SingleCellExperiment)
+# Read in data
+isletFile <- system.file("extdata", "isletCells.txt.gz", package = "spicyR")
+cells <- read.table(isletFile, header = TRUE)
+cellExp <- SingleCellExperiment(
+  assay = list(intensities = t(cells[, grepl(names(cells), pattern = "Intensity_")])),
+  colData = cells[, !grepl(names(cells), pattern = "Intensity_")]
+)
 
 # Cluster cell types
-markers <- cellMarks(cellExp)
-kM <- kmeans(markers,8)
-cellType(cellExp) <- paste('cluster',kM$cluster, sep = '')
+markers <- t(assay(cellExp, "intensities"))
+kM <- kmeans(markers, 8)
+colData(cellExp)$cluster <- paste("cluster", kM$cluster, sep = "")
 
 # Generate LISA
-lisaCurves <- lisa(cellExp)
+lisaCurves <- lisa(
+  cellExp,
+  spatialCoords = c("Location_Center_X", "Location_Center_Y"),
+  cellType = "cluster", imageID = "ImageNumber"
+)
 
 # Cluster the LISA curves
-kM <- kmeans(lisaCurves,2)
-cellAnnotation(cellExp, "region") <- paste('region',kM$cluster,sep = '_')
+kM <- kmeans(lisaCurves, 2)
 
 }
