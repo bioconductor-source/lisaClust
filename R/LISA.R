@@ -7,9 +7,13 @@
 #' @param window Should the window around the regions be 'square', 'convex' or 'concave'.
 #' @param window.length A tuning parameter for controlling the level of concavity
 #' when estimating concave windows.
+#' @param whichParallel Should the function use parallization on the imageID or
+#' the cellType.
 #' @param sigma A numeric variable used for scaling when filting inhomogeneous L-curves.
 #' @param lisaFunc Either "K" or "L" curve.
 #' @param minLambda  Minimum value for density for scaling when fitting inhomogeneous L-curves.
+#' @param fast A logical describing whether to use a fast approximation of the
+#' inhomogeneous local L-curves.
 #' @param spatialCoords The columns which contain the x and y spatial coordinates.
 #' @param cellType The column which contains the cell types.
 #' @param imageID The column which contains image identifiers.
@@ -55,9 +59,11 @@ lisa <-
            BPPARAM = BiocParallel::SerialParam(),
            window = "convex",
            window.length = NULL,
+           whichParallel = "imageID",
            sigma = NULL,
            lisaFunc = "K",
            minLambda = 0.05,
+           fast = TRUE,
            spatialCoords = c("x", "y"),
            cellType = "cellType",
            imageID = "imageID") {
@@ -72,28 +78,52 @@ lisa <-
       Rs <- c(20, 50, 100)
     }
 
-    BPimage <- BPPARAM
+    BPimage <- BPcellType <- BiocParallel::SerialParam()
+    if (whichParallel == "imageID") {
+      BPimage <- BPPARAM
+    }
+    if (whichParallel == "cellType") {
+      BPcellType <- BPPARAM
+    }
 
-    message("Generating local L-curves.")
+    if (!fast) {
+      message("Generating local L-curves. ")
+      if (identical(BPimage, BPcellType)) {
+        message("You might like to consider setting BPPARAM to run the calculations in parallel.")
+      }
+      curveList <-
+        BiocParallel::bplapply(
+          cellSummary,
+          generateCurves,
+          Rs = Rs,
+          window = window,
+          window.length = window.length,
+          BPcellType = BPcellType,
+          BPPARAM = BPimage,
+          sigma = sigma
+        )
+    }
 
-    curveList <-
-      BiocParallel::bplapply(
-        cellSummary,
-        inhomLocalK,
-        Rs = Rs,
-        sigma = sigma,
-        window = window,
-        window.length = window.length,
-        minLambda = minLambda,
-        lisaFunc = lisaFunc,
-        BPPARAM = BPimage
-      )
+    if (fast) {
+      message("Generating local L-curves. If you run out of memory, try 'fast = FALSE'.")
+
+      curveList <-
+        BiocParallel::bplapply(
+          cellSummary,
+          inhomLocalK,
+          Rs = Rs,
+          sigma = sigma,
+          window = window,
+          window.length = window.length,
+          minLambda = minLambda,
+          lisaFunc = lisaFunc,
+          BPPARAM = BPimage
+        )
+    }
 
     curvelist <- lapply(curveList, as.data.frame)
     curves <- as.matrix(dplyr::bind_rows(curvelist))
-    rownames(curves) <- as.character(
-      unlist(lapply(cellSummary, function(x) x$cellID))
-    )
+    rownames(curves) <- as.character(unlist(lapply(cellSummary, function(x) x$cellID)))
 
     curves[is.na(curves)] <- 0
     return(curves)
