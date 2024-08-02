@@ -61,7 +61,12 @@ hatchingPlot <-
             ),
             bind = TRUE
         )
-
+        
+        regionCol <- c(colData(data)[, region])
+        
+        df <- data.frame(df, 
+                         region = regionCol)
+        
         if (is.null(useImages)) useImages <- df$imageID[1]
 
         if (any(!useImages %in% df$imageID)) {
@@ -255,9 +260,8 @@ scale_region <-
         discrete_scale(
             "region",
             "region_d",
-            palette = function(n) {
-                seq_len(n)
-            },
+            palette = function(n) 
+                seq_len(n),
             ...
         )
     }

@@ -72,6 +72,7 @@ lisa <-
         cells, imageID, cellType, spatialCoords, FALSE
       )
     }
+    
     cellSummary <- spicyR:::getCellSummary(cells, bind = FALSE)
 
     if (is.null(Rs)) {
