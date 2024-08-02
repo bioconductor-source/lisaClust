@@ -11,6 +11,11 @@ author:
   - &WIMR Westmead Institute for Medical Research, University of Sydney, Australia
   - School of Mathematics and Statistics, University of Sydney, Australia
   email: ellis.patrick@sydney.edu.au
+- name: Alex Run Qin
+  affiliation:
+  - &WIMR Westmead Institute for Medical Research, University of Sydney, Australia
+  - School of Mathematics and Statistics, University of Sydney, Australia
+  email: alex.qin@sydney.edu.au
 package: "`r BiocStyle::pkg_ver('spicyR')`"
 vignette: >
   %\VignetteIndexEntry{"Inroduction to lisaClust"}
@@ -41,10 +46,13 @@ BiocManager::install("lisaClust")
 
 ```{r message=FALSE, warning=FALSE}
 # load required packages
-library(lisaClust)
-library(spicyR)
+# library(lisaClust)
+# library(spicyR)
+devtools::load_all("~/spicyR")
+devtools::load_all("/dskh/nobackup/alexq/lisaClust")
 library(ggplot2)
 library(SingleCellExperiment)
+library(SpatialDatasets)
 ```
 
 # Overview
@@ -166,65 +174,41 @@ colData(SCE) |> head()
 ```
 
 
+# Keren et al. breast cancer data.
 
-
-# Damond et al. islet data.
-
-Next, we apply our `lisaClust` framework to three images of pancreatic
-islets from *A Map of Human Type 1 Diabetes Progression by Imaging Mass
-Cytometry* by Damond et al. (2019).
+Next, we apply our `lisaClust` framework to two images of breast cancer from *A Structured Tumor-Immune Microenvironment in Triple Negative Breast Cancer Revealed by Multiplexed Ion Beam Imaging* by Keren et al. (2018)
 
 ## Read in data
 
-We will start by reading in the data and storing it as a
-`SingleCellExperiment` object. Here the data is in a format consistent with
+We will start by reading in the data from the `SpatialDatasets` package
+as a `SingleCellExperiment` object. Here the data is in a format consistent with
 that outputted by CellProfiler.
 
 ```{r}
-isletFile <- system.file("extdata", "isletCells.txt.gz", package = "spicyR")
-cells <- read.table(isletFile, header = TRUE)
-damonSCE <- SingleCellExperiment(
-  assay = list(intensities = t(cells[, grepl(names(cells), pattern = "Intensity_")])),
-  colData = cells[, !grepl(names(cells), pattern = "Intensity_")]
-)
-```
-
-## Cluster cell-types
-
-This data does not include annotation of the cell-types of each cell.
-Here we extract the marker intensities from the `SingleCellExperiment` object
-using `assay()`. We then perform k-means clustering with 10
-clusters and store these cell-type clusters in our `SingleCellExperiment`
-object using `colData() <-`.
-
-```{r}
-markers <- t(assay(damonSCE, "intensities"))
-kM <- kmeans(markers, 10)
-colData(damonSCE)$cluster <- paste("cluster", kM$cluster, sep = "")
-colData(damonSCE)[, c("ImageNumber", "cluster")] |> head()
+kerenSPE <- SpatialDatasets::spe_Keren_2018()
 ```
 
 ## Generate LISA curves
 
-As before, we can perform k-means clustering on the local
-indicators of spatial association (LISA) functions using the `lisaClust`
-function, remembering to specify the `imageID`, `cellType`, and `spatialCoords` 
-columns in `colData`.
+This data includes annotation of the cell-types of each cell. Hence, we can
+move directly to performing k-means clustering on the local indicators of
+spatial association (LISA) functions using the `lisaClust` function, remembering
+to specify the `imageID`, `cellType`, and `spatialCoords` 
+columns in `colData`. For the purpose of demonstration, we will be using
+only images 5 & 6 of the `kerenSPE` dataset.
 
 ```{r}
-damonSCE <- lisaClust(damonSCE,
-  k = 2,
-  Rs = c(10, 20, 50),
-  imageID = "ImageNumber",
-  cellType = "cluster",
-  spatialCoords = c("Location_Center_X", "Location_Center_Y")
+kerenSPE <- kerenSPE[,kerenSPE$imageID %in% c("5", "6")]
+
+kerenSPE <- lisaClust(kerenSPE,
+  k = 5
 )
 ```
 
 These regions are stored in `colData` and can be extracted.
 
 ```{r}
-colData(damonSCE)[, c("ImageNumber", "region")] |>
+colData(kerenSPE)[, c("imageID", "region")] |>
   head(20)
 ```
 
@@ -234,18 +218,16 @@ colData(damonSCE)[, c("ImageNumber", "region")] |>
 cell types are located in which regions. In this example, we use this to check
 which cell types appear more frequently in each region than expected by chance.
 
-Here, we clearly see that clusters 2, 5, 1, and 8 are highly concentrated in 
-region 1, whilst all other clusters are thinly spread out across region 2.
+Here, we clearly see that healthy epithelial and mesenchymal tissue are highly
+concentrated in region 1, immune cells are concentrated in regions 2 and 4, 
+whilst tumour cells are spread out across regions 3 and 5.
 
 We can further segregate these cells by increasing the number of clusters, ie.
 increasing the parameter `k = ` in the `lisaClust()` function, but for the purposes
 of demonstration, let's take a look at the `hatchingPlot` of these regions.
 
 ```{r}
-regionMap(damonSCE,
-  imageID = "ImageNumber",
-  cellType = "cluster",
-  spatialCoords = c("Location_Center_X", "Location_Center_Y"),
+regionMap(kerenSPE,
   type = "bubble"
 )
 ```
@@ -254,14 +236,10 @@ regionMap(damonSCE,
 
 Finally, we can use `hatchingPlot` to construct a `ggplot` object where
 the regions are marked by different hatching patterns. This allows us to
-visualize the two regions and ten cell-types simultaneously.
+visualize the 5 regions and 17 cell-types simultaneously.
 
 ```{r}
-hatchingPlot(damonSCE,
-  imageID = "ImageNumber",
-  cellType = "cluster",
-  spatialCoords = c("Location_Center_X", "Location_Center_Y")
-)
+hatchingPlot(kerenSPE)
 ```
 
 # sessionInfo()
