@@ -46,10 +46,8 @@ BiocManager::install("lisaClust")
 
 ```{r message=FALSE, warning=FALSE}
 # load required packages
-# library(lisaClust)
-# library(spicyR)
-devtools::load_all("~/spicyR")
-devtools::load_all("/dskh/nobackup/alexq/lisaClust")
+library(lisaClust)
+library(spicyR)
 library(ggplot2)
 library(SingleCellExperiment)
 library(SpatialDatasets)

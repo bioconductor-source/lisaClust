@@ -42,5 +42,5 @@ Imports:
     SummarizedExperiment,
     pheatmap,
     spatstat.random
-Suggests: BiocStyle, knitr, rmarkdown
+Suggests: BiocStyle, knitr, rmarkdown, SpatialDatasets
 RoxygenNote: 7.3.1

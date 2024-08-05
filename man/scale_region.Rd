@@ -43,6 +43,7 @@ y <- round(c(
 cellType <- factor(paste("c", rep(rep(c(1:2), rep(200, 2)), 4), sep = ""))
 imageID <- rep(c("s1", "s2"), c(800, 800))
 cells <- data.frame(x, y, cellType, imageID)
+cells <- SingleCellExperiment::SingleCellExperiment(colData = cells)
 
 ## Generate regions
 cells <- lisaClust(cells, k = 2)
