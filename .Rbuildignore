@@ -4,3 +4,4 @@
 ^Meta$
 ^\.vscode$
 ^_pkgdown\.yml$
+^\.github$
